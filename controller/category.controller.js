@@ -3,7 +3,7 @@ const Category = require("../model/category.model.js");
 const createCategory = async (req, res) => {
     try {
         const { name } = req.body;
-
+        
         // Check if category already exists
         const existing = await Category.findOne({ name: name.trim() });
         if (existing) {

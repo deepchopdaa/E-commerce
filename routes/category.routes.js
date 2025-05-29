@@ -1,4 +1,5 @@
 const express = require("express");
+const protect = require("../middleware/protected.middleware.js")
 const {
     createCategory,
     getAllCategories,
@@ -8,9 +9,9 @@ const {
 
 const router = express.Router();
 
-router.post("/add", createCategory);           // Create category
+router.post("/add",protect, createCategory);           // Create category
 router.get("/get", getAllCategories);          // Get all categories
-router.put("/update/:id", updateCategory);         // Update category
+router.put("/update/:id", updateCategory);         // Update categorys
 router.delete("/delete/:id", deleteCategory);      // Delete category
 
 module.exports = router;

@@ -3,7 +3,9 @@ const Cart = require("../model/cart.model.js")
 const GetCart = async (req, res) => {
     try {
         console.log("Cart Get Api called !")
-        let data = Cart.find()
+        const user = req.user
+        const user_id = user._id
+        let data = Cart.find({ user_id: user_id })
         if (!data) {
             console.log("Data Not Found")
         }
@@ -70,16 +72,16 @@ const DeleteCart = async (req, res) => {
         const user = req.user;
         const user_id = user._id
         const { product_id } = req.body
-        const cart = Cart.findOne({user_id})
-        if(cart){
-            initialvalue=cart.items.length
-            cart.items = cart.items.filter(item=>item.product_id.toString() !== product_id);
-            if(cart.items.length === initialvalue){
+        const cart = Cart.findOne({ user_id })
+        if (cart) {
+            initialvalue = cart.items.length
+            cart.items = cart.items.filter(item => item.product_id.toString() !== product_id);
+            if (cart.items.length === initialvalue) {
                 return res.status(400).send("This product Not Found in Cart !")
             }
             await cart.save();
             return res.status(203).send(cart);
-        }else{
+        } else {
             return res.status(400).send("cart Item not Found for this product !")
         }
     } catch (e) {

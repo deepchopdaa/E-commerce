@@ -1,6 +1,6 @@
-const { fstat } = require("fs");
 const Product = require("../model/product.model.js")
 const fs = require("fs")
+const path = require("path")
 const GetProduct = async (req, res) => {
     try {
         console.log('Get Prodcut Api Called')
@@ -25,10 +25,14 @@ const AddProduct = async (req, res) => {
         if (!name, !description, !price, !category, !brand, !stoke) {
             return res.status(400).send("All Feild Rqquired !")
         }
-        if (req.file) {
+        if (!req.file) {
             return res.status(400).send("Image Not Found !")
         }
-        let NewProduct = Product.create({ name, description, price, category, brand, stoke, image: req.file.filename });
+        console.log(req.file)
+        let filename = req.file.filename
+        console.log(filename)
+        let NewProduct = await Product.create({ name, description, price, category, brand, stoke, image: req.file.path });
+        console.log(NewProduct)
         return res.status(500).send(NewProduct);
     } catch (e) {
         console.log("Add product Error", e);
@@ -78,7 +82,7 @@ const DeleteProduct = async (req, res) => {
             return res.status(403).send('Product Not Found !')
         }
         let existing_image = productfind.image
-        fs.unlink(`uploads/${existing_image}`, (err) => {
+        fs.unlink(`uploads/${existing_image}`, (err) => {   
             if (err) {
                 console.log("Delete old file Failed")
             } else {
@@ -94,4 +98,105 @@ const DeleteProduct = async (req, res) => {
     }
 }
 
-module.exports = { GetProduct, AddProduct, UpdateProduct, DeleteProduct }
+/* user Api */
+
+const SerchProduct = async (req, res) => {
+    try {
+        console.log("Search api called !");
+        const { KeyWord } = req.query
+        const page = parseInt(req.query.page) || 1
+        const limit = parseInt(req.query.limit) || 10
+        const skip = (page - 1) * limit;
+        const query = KeyWord ? {
+            $or: [
+                { name: { $regex: KeyWord, $option: "i" } },
+                { category: { $regex: KeyWord, $option: "i" } },
+                { description: { $regex: KeyWord, $option: "i" } },
+            ],
+        } : {};
+        const products = await Product.find(query).skip(skip).limit(limit);
+        return res.status(200).send(products);
+    } catch (e) {
+        console.log('Search Api Error ', e);
+        return res.status(500).send("Serch Api Error !", e);
+    }
+}
+
+const ListAllProduct = async (req, res) => {
+    try {
+        console.log("Pagination Get Api Called !")
+        const page = parseInt(req.query.page) || 1
+        const limit = parseInt(req.query.limit) || 10
+        const skip = (page - 1) * limit;
+        let data = Product.find().skip(skip).limit(limit)
+        console.log(data, "List All product !");
+        return res.status(201).send(data);
+    } catch (e) {
+        console.log("List Product Error", e);
+        return res.status(500).send("List Product Error", e);
+    }
+}
+
+const ListByCategory = async (req, res) => {
+    try {
+        console.log("List Categiry By Api Called !");
+        let id = req.params.id;
+        const page = parseInt(req.query.page) || 1
+        const limit = parseInt(req.query.limit) || 10
+        const skip = (page - 1) * limit;
+        const Bycategory = Product.find(id).skip(skip).limit(limit)
+        console.log(Bycategory);
+        return res.status(201).send(Bycategory);
+    } catch (e) {
+        console.log("List By Category Error", e);
+        return res.status(500).send("List By Category Error", e);
+    }
+}
+
+const FilterAplly = async (req, res) => {
+    try {
+        console.log("filter Data Api called !");
+        const {
+            Keyword,
+            maxPrize,
+            minPrize,
+            brand,
+            category,
+            page = 1,
+            limit = 10
+        } = req.query
+
+        const skip = (page - 1) * limit;
+        if (Keyword) {
+            query.$or = [
+                { name: { $regex: Keyword, $option: "i" } },
+                { category: { $regex: Keyword, $option: "i" } },
+                { description: { $regex: Keyword, $option: "i" } }
+            ]
+        }
+
+        if (maxPrize || minPrize) {
+            query = {}
+            if (minPrize) query.price.$gte = Number(minPrize)
+            if (maxPrize) query.price.$lte = Number(maxPrize)
+        }
+
+        if (brand) {
+            query.brand = { $regex: brand, $option: "i" }
+        }
+
+        if (category) {
+            query.category = { $regex: category, $option: "i" }
+        }
+
+        let data = await Product.find(query).skip(skip).limit(limit);
+        const Count = await Product.coundDocuments(query)
+        console.log(Count, "Count")
+        return res.status(200).send(data)
+    } catch (e) {
+        console.log("Filtering Data Error", e)
+        return res.status(500).send("Filtering Data Errior", e)
+    }
+}
+
+module.exports = { GetProduct, AddProduct, UpdateProduct, DeleteProduct, SerchProduct, ListAllProduct, ListByCategory, FilterAplly }
