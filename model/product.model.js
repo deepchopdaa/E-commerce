@@ -30,10 +30,10 @@ const ProductSchema = mongoose.Schema({
         required: true,
         default: 0
     },
-    image: {
+    image: [{
         type: String,
         required: true
-    },
+    }],
     rating: {
         type: Number,
         default: 0

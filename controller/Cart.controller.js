@@ -27,6 +27,7 @@ const AddCart = async (req, res) => {
             let cartlength = Cart.items.findIndex(item => item.product_id === product_id)
             if (cartlength > -1) {
                 cart.items[cartlength].qty = qty
+                
             } else {
                 cart.items.push({ product_id, qty })
             }

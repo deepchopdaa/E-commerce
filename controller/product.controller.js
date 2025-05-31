@@ -16,6 +16,22 @@ const GetProduct = async (req, res) => {
         return res.status(500).send("Get Product Error", e)
     }
 }
+const GetProductAdmin = async (req, res) => {
+    try {
+        console.log('Get Prodcut Api Called')
+        let data = await Product.find().populate("category", "name");
+        console.log(data)
+        if (!data) {
+            console.log("data Is Empty")
+            return res.status(400).send("Data Is Empty")
+        }
+        const LowStoke = data.filter(p => p.stoke <= 5)
+        return res.status(201).send({ data, lowStoke: LowStoke })
+    } catch (e) {
+        console.log("Get product Error", e);
+        return res.status(500).send("Get Product Error", e)
+    }
+}
 
 const AddProduct = async (req, res) => {
     try {
@@ -25,13 +41,16 @@ const AddProduct = async (req, res) => {
         if (!name, !description, !price, !category, !brand, !stoke) {
             return res.status(400).send("All Feild Rqquired !")
         }
-        if (!req.file) {
+        if (!req.files) {
             return res.status(400).send("Image Not Found !")
         }
-        console.log(req.file)
-        let filename = req.file.filename
-        console.log(filename)
-        let NewProduct = await Product.create({ name, description, price, category, brand, stoke, image: req.file.path });
+        console.log(req.files, " req files ")
+        let filename = req.files.filename
+        console.log(filename, "file name !")
+
+        console.log(req.files)        
+
+        let NewProduct = await Product.create({ name, description, price, category, brand, stoke, image:req.files.filename  });
         console.log(NewProduct)
         return res.status(200).send(NewProduct);
     } catch (e) {
@@ -67,7 +86,7 @@ const UpdateProduct = async (req, res) => {
             }
         })
         console.log(req.file.path)
-        let UpdateProduct = await Product.findByIdAndUpdate(id, { name, description, price, category, brand, stoke, image: req.file.path }, { new: true })
+        let UpdateProduct = await Product.findByIdAndUpdate(id, { name, description, price, category, brand, stoke, image: req.files.path }, { new: true })
         console.log(UpdateProduct)
         return res.status(201).send(UpdateProduct)
     } catch (e) {
@@ -159,7 +178,6 @@ const ListByCategory = async (req, res) => {
 const FilterAplly = async (req, res) => {
     try {
         console.log("Filter Data API called!");
-
         const {
             Keyword,
             maxPrize,
@@ -219,4 +237,4 @@ const FilterAplly = async (req, res) => {
 
 }
 
-module.exports = { GetProduct, AddProduct, UpdateProduct, DeleteProduct, SerchProduct, ListAllProduct, ListByCategory, FilterAplly }
+module.exports = { GetProduct, AddProduct, UpdateProduct, DeleteProduct, SerchProduct, ListAllProduct, ListByCategory, FilterAplly, GetProductAdmin }

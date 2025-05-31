@@ -49,6 +49,11 @@ const OderSchema = mongoose.Schema({
         required: true,
         default: 0.0,
     },
+    status:{
+        type:String,
+        enum:["Pendding","Confirm","Shipped","Delivered","Cancel","Returned"],
+        default:'Pendding'
+    },
     isPaid: {
         type: Boolean,
         required: true,
