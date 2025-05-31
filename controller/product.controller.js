@@ -6,7 +6,7 @@ const GetProduct = async (req, res) => {
         console.log('Get Prodcut Api Called')
         let data = await Product.find().populate("category", "name");
         console.log(data)
-        if (data) {
+        if (!data) {
             console.log("data Is Empty")
             return res.status(400).send("Data Is Empty")
         }
@@ -33,7 +33,7 @@ const AddProduct = async (req, res) => {
         console.log(filename)
         let NewProduct = await Product.create({ name, description, price, category, brand, stoke, image: req.file.path });
         console.log(NewProduct)
-        return res.status(500).send(NewProduct);
+        return res.status(200).send(NewProduct);
     } catch (e) {
         console.log("Add product Error", e);
         return res.status(500).send("Add Product Error", e)
@@ -45,11 +45,11 @@ const UpdateProduct = async (req, res) => {
         console.log('Update Prodcut Api Called')
         console.log(req.body);
         let id = req.params.id
-        let { name, description, price, category, brand, stoke, rating, numReviews, } = req.body;
-        if (!name, !description, !price, !category, !brand, !stoke, !rating, !numReviews) {
+        let { name, description, price, category, brand, stoke } = req.body;
+        if (!name, !description, !price, !category, !brand, !stoke) {
             return res.status(400).send("All Feild Rqquired !")
         }
-        if (req.file) {
+        if (!req.file) {
             return res.status(400).send("Image Not Found !")
         }
 
@@ -58,14 +58,17 @@ const UpdateProduct = async (req, res) => {
             return res.status(403).send('Product Not Found !')
         }
         let existing_image = productfind.image
-        fs.unlink(`uploads/${existing_image}`, (err) => {
+        console.log(existing_image)
+        fs.unlinkSync(existing_image, (err) => {
             if (err) {
                 console.log("Delete old file Failed")
             } else {
                 console.log("old File Deleted Sucessfully");
             }
         })
-        let UpdateProduct = await Product.findByIdAndUpdate(id, { name, description, price, category, brand, stoke, rating, image: req.file.filename })
+        console.log(req.file.path)
+        let UpdateProduct = await Product.findByIdAndUpdate(id, { name, description, price, category, brand, stoke, image: req.file.path }, { new: true })
+        console.log(UpdateProduct)
         return res.status(201).send(UpdateProduct)
     } catch (e) {
         console.log("Update product Error", e);
@@ -82,7 +85,8 @@ const DeleteProduct = async (req, res) => {
             return res.status(403).send('Product Not Found !')
         }
         let existing_image = productfind.image
-        fs.unlink(`uploads/${existing_image}`, (err) => {   
+        console.log(existing_image)
+        fs.unlinkSync(existing_image, (err) => {
             if (err) {
                 console.log("Delete old file Failed")
             } else {
@@ -91,7 +95,6 @@ const DeleteProduct = async (req, res) => {
         })
         let DeleteProduct = await Product.findByIdAndDelete(id);
         return res.status(200).send(DeleteProduct);
-
     } catch (e) {
         console.log("Delete product Error", e);
         return res.status(500).send("Delete Product Error", e)
@@ -109,9 +112,9 @@ const SerchProduct = async (req, res) => {
         const skip = (page - 1) * limit;
         const query = KeyWord ? {
             $or: [
-                { name: { $regex: KeyWord, $option: "i" } },
-                { category: { $regex: KeyWord, $option: "i" } },
-                { description: { $regex: KeyWord, $option: "i" } },
+                { name: { $regex: KeyWord, $options: "i" } },
+                { category: { $regex: KeyWord, $options: "i" } },
+                { description: { $regex: KeyWord, $options: "i" } },
             ],
         } : {};
         const products = await Product.find(query).skip(skip).limit(limit);
@@ -155,7 +158,8 @@ const ListByCategory = async (req, res) => {
 
 const FilterAplly = async (req, res) => {
     try {
-        console.log("filter Data Api called !");
+        console.log("Filter Data API called!");
+
         const {
             Keyword,
             maxPrize,
@@ -164,39 +168,55 @@ const FilterAplly = async (req, res) => {
             category,
             page = 1,
             limit = 10
-        } = req.query
+        } = req.query;
+
+        const query = {};
 
         const skip = (page - 1) * limit;
+
+        // Keyword search
         if (Keyword) {
             query.$or = [
-                { name: { $regex: Keyword, $option: "i" } },
-                { category: { $regex: Keyword, $option: "i" } },
-                { description: { $regex: Keyword, $option: "i" } }
-            ]
+                { name: { $regex: Keyword, $options: "i" } },
+                { description: { $regex: Keyword, $options: "i" } }
+            ];
         }
 
-        if (maxPrize || minPrize) {
-            query = {}
-            if (minPrize) query.price.$gte = Number(minPrize)
-            if (maxPrize) query.price.$lte = Number(maxPrize)
+        // Price filter
+        if (minPrize || maxPrize) {
+            query.price = {};
+            if (minPrize) query.price.$gte = Number(minPrize);
+            if (maxPrize) query.price.$lte = Number(maxPrize);
         }
 
+        // Brand filter
         if (brand) {
-            query.brand = { $regex: brand, $option: "i" }
+            query.brand = { $regex: brand, $options: "i" };
         }
 
+        // Category filter
         if (category) {
-            query.category = { $regex: category, $option: "i" }
+            query.category = { $regex: category, $options: "i" };
         }
 
-        let data = await Product.find(query).skip(skip).limit(limit);
-        const Count = await Product.coundDocuments(query)
-        console.log(Count, "Count")
-        return res.status(200).send(data)
+        // Fetch data with pagination
+        const data = await Product.find(query).skip(skip).limit(Number(limit));
+        const count = await Product.countDocuments(query);
+
+        console.log(count, "Total matching products");
+
+        return res.status(200).send({
+            success: true,
+            total: count,
+            page: Number(page),
+            limit: Number(limit),
+            data,
+        });
     } catch (e) {
-        console.log("Filtering Data Error", e)
-        return res.status(500).send("Filtering Data Errior", e)
+        console.error("Filtering Data Error", e);
+        return res.status(500).send("Filtering Data Error");
     }
+
 }
 
 module.exports = { GetProduct, AddProduct, UpdateProduct, DeleteProduct, SerchProduct, ListAllProduct, ListByCategory, FilterAplly }

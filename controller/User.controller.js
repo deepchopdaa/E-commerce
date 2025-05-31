@@ -10,7 +10,6 @@ const RegisterUser = async (req, res) => {
         let userFind = await User.findOne({ email: email })
         console.log(userFind, "User Find !")
         if (!userFind) {
-
             const hashpassword = await bcrypt.hash(password, 10);
             console.log(hashpassword)
             let newUser = await User.create({ name, email, password: hashpassword, isAdmin })

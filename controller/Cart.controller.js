@@ -4,7 +4,7 @@ const GetCart = async (req, res) => {
     try {
         console.log("Cart Get Api called !")
         const user = req.user
-        const user_id = user._id
+        const user_id = user.id
         let data = Cart.find({ user_id: user_id })
         if (!data) {
             console.log("Data Not Found")
@@ -20,7 +20,7 @@ const AddCart = async (req, res) => {
     try {
         console.log("Cart Add Api called !")
         const user = req.user
-        const user_id = user._id
+        const user_id = user.id
         const { product_id, qty } = req.body
         const cart = Cart.findOne({ user_id })
         if (cart) {
@@ -46,7 +46,7 @@ const UpdateCart = async (req, res) => {
     try {
         console.log("Cart update Api called !")
         const user = req.user
-        const user_id = user._id
+        const user_id = user.id
         const { product_id, qty } = req.body
         const cart = Cart.findOne({ user_id })
         if (cart) {
@@ -70,7 +70,7 @@ const DeleteCart = async (req, res) => {
     try {
         console.log("Cart Delete Api called !")
         const user = req.user;
-        const user_id = user._id
+        const user_id = user.id
         const { product_id } = req.body
         const cart = Cart.findOne({ user_id })
         if (cart) {

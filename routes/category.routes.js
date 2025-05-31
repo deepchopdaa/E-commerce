@@ -6,12 +6,13 @@ const {
     updateCategory,
     deleteCategory,
 } = require("../controller/category.controller.js");
+const multer = require("../middleware/multer.js")
 
 const router = express.Router();
 
-router.post("/add",protect, createCategory);           // Create category
+router.post("/add", protect, multer.single("image"), createCategory);   // Create category
 router.get("/get", getAllCategories);          // Get all categories
-router.put("/update/:id", updateCategory);         // Update categorys
+router.put("/update/:id", multer.single("image"), updateCategory);  // Update categorys
 router.delete("/delete/:id", deleteCategory);      // Delete category
 
 module.exports = router;
