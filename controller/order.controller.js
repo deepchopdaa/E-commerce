@@ -85,7 +85,7 @@ const OrderStatusUpdate = async (req, res) => {
         let findOrder = await Order.findById(id);
         if (!findOrder) {
             return res.status(404).send("Order Not Found !")
-        }
+        }   
         if (findOrder.status === "Pendding") {
             if (findOrder.isPaid == true) {
                 findOrder.status = "Confirm"

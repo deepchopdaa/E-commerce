@@ -10,7 +10,7 @@ const multer = require("../middleware/multer.js")
 
 const router = express.Router();
 
-router.post("/add", protect, multer.single("image"), createCategory);   // Create category
+router.post("/add", multer.single("image"), createCategory);   // Create category
 router.get("/get", getAllCategories);          // Get all categories
 router.put("/update/:id", multer.single("image"), updateCategory);  // Update categorys
 router.delete("/delete/:id", deleteCategory);      // Delete category

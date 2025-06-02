@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../model/user.model");
 
 const protect = async (req, res, next) => {
-    console.log("middleare called")
+    console.log(" protected middleare called")
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) return res.status(400).send("Token Not Found !")
     console.log(token)

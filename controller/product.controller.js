@@ -1,3 +1,4 @@
+const e = require("express")
 const Product = require("../model/product.model.js")
 const fs = require("fs")
 const path = require("path")
@@ -48,9 +49,9 @@ const AddProduct = async (req, res) => {
         let filename = req.files.filename
         console.log(filename, "file name !")
 
-        console.log(req.files)        
-
-        let NewProduct = await Product.create({ name, description, price, category, brand, stoke, image:req.files.filename  });
+        console.log(req.files)
+        const destructure = req.files.map((file) => file.path)
+        let NewProduct = await Product.create({ name, description, price, category, brand, stoke, image: destructure });
         console.log(NewProduct)
         return res.status(200).send(NewProduct);
     } catch (e) {
@@ -68,25 +69,33 @@ const UpdateProduct = async (req, res) => {
         if (!name, !description, !price, !category, !brand, !stoke) {
             return res.status(400).send("All Feild Rqquired !")
         }
-        if (!req.file) {
+        if (!req.files) {
             return res.status(400).send("Image Not Found !")
         }
-
+        const Destruacture = req.files.map((file) => file.path)
         let productfind = await Product.findById(id)
         if (!productfind) {
             return res.status(403).send('Product Not Found !')
         }
+
         let existing_image = productfind.image
         console.log(existing_image)
-        fs.unlinkSync(existing_image, (err) => {
-            if (err) {
-                console.log("Delete old file Failed")
+        existing_image.forEach(element => {
+            console.log(element)
+            if (fs.existsSync(element)) {
+                fs.unlinkSync(element, (err) => {
+                    if (err) {
+                        console.log("Delete old file Failed")
+                    } else {
+                        console.log("old File Deleted Sucessfully");
+                    }
+                })
             } else {
-                console.log("old File Deleted Sucessfully");
+                console.log("image Not Found", element)
             }
-        })
-        console.log(req.file.path)
-        let UpdateProduct = await Product.findByIdAndUpdate(id, { name, description, price, category, brand, stoke, image: req.files.path }, { new: true })
+
+        });
+        let UpdateProduct = await Product.findByIdAndUpdate(id, { name, description, price, category, brand, stoke, image: Destruacture }, { new: true })
         console.log(UpdateProduct)
         return res.status(201).send(UpdateProduct)
     } catch (e) {
@@ -105,13 +114,21 @@ const DeleteProduct = async (req, res) => {
         }
         let existing_image = productfind.image
         console.log(existing_image)
-        fs.unlinkSync(existing_image, (err) => {
-            if (err) {
-                console.log("Delete old file Failed")
+        existing_image.forEach((element) => {
+            console.log(element)
+            if (fs.existsSync(element)) {
+                fs.unlinkSync(element, (err) => {
+                    if (err) {
+                        console.log("Delete old file Failed")
+                    } else {
+                        console.log("old File Deleted Sucessfully");
+                    }
+                })
             } else {
-                console.log("old File Deleted Sucessfully");
+                console.log("image Not Found", element)
             }
         })
+
         let DeleteProduct = await Product.findByIdAndDelete(id);
         return res.status(200).send(DeleteProduct);
     } catch (e) {
@@ -205,11 +222,11 @@ const FilterAplly = async (req, res) => {
             query.price = {};
             if (minPrize) query.price.$gte = Number(minPrize);
             if (maxPrize) query.price.$lte = Number(maxPrize);
-        }
+        } 
 
         // Brand filter
         if (brand) {
-            query.brand = { $regex: brand, $options: "i" };
+            query.brand = { $regex: brand, $options: "i" }; 
         }
 
         // Category filter

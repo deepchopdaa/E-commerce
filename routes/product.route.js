@@ -6,8 +6,9 @@ const multer = require("../middleware/multer.js")
 router.get("/get", GetProduct);
 router.get("/getadmin", isAdmin, GetProductAdmin);
 router.get("/getbyfilter", FilterAplly);
-router.post("/add",  multer.array("image"), AddProduct)
-router.put("/update/:id", multer.array("image",10), UpdateProduct)
+router.post("/add",  multer.array("image",5), AddProduct)
+router.put("/update/:id", multer.array("image",5), UpdateProduct)
 router.delete("/delete/:id", DeleteProduct)
 
 module.exports = router
+    

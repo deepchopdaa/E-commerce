@@ -19,6 +19,13 @@ app.use("/category", Category)
 
 const product = require("./routes/product.route.js")
 app.use('/product', product)
+
+const cart = require("./routes/Cart.route.js")
+app.use("/cart",cart)
+
+const order = require("./routes/Order.routes.js")
+app.use("/order",order)
+
 app.listen(PORT, () => {
     console.log(`App is running On ${PORT} !`)
 })
